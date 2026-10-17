@@ -1,0 +1,28 @@
+# Developer audit & scratch scripts
+*.ps1
+test_*.png
+*.log
+chrome_debug.log
+
+# Scratch data dumps
+gas_test.json
+history_24.json
+parents_32.json
+
+# Local Excel spreadsheets with private contacts
+*.xlsx
+
+# Python bytecode & environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Redundant local deploy mirrors
+propsperpaymentss-vercel-deploy/
+payment-tracker-deploy/
+netlify-deploy/
+web/
+backups/

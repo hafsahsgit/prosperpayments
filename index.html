@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Prosper Work • Parent Payment & Due Date Tracking</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -403,6 +406,7 @@
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span id="syncBadgeText">Online</span>
             </button>
+            <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-900/60 text-emerald-300 font-mono font-bold border border-emerald-500/30" title="Roster 32 Realtime Version">v3.0 (32 Synced)</span>
           </div>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             <p class="text-xs text-slate-400 font-medium" id="currentDateBanner">Active Cycle: Loading...</p>
@@ -473,8 +477,8 @@
       <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
         <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Active Parents</span>
         <div class="mt-2 flex items-baseline justify-between">
-          <span class="text-2xl font-black text-slate-900" id="kpiActiveParents">0</span>
-          <span class="text-xs font-semibold text-emerald-700 font-mono">Roster</span>
+          <span class="text-2xl font-black text-slate-900" id="kpiActiveParents">30</span>
+          <span class="text-xs font-semibold text-emerald-700 font-mono">/ 32 Roster</span>
         </div>
       </div>
 
@@ -544,7 +548,7 @@
         📊 <span id="trackerTabLabel">Payment Tracker</span>
       </button>
       <button onclick="switchTab('parents')" id="tabBtnParents" class="py-2.5 px-1 border-b-2 border-transparent text-slate-700 hover:text-slate-900 font-black cursor-pointer">
-        👥 Parents Database (<span id="tabCountParents" class="font-mono">26</span>)
+        👥 Parents Database (<span id="tabCountParents" class="font-mono">32</span>)
       </button>
       <button onclick="switchTab('payroll')" id="tabBtnPayroll" class="py-2.5 px-1 border-b-2 border-transparent text-slate-700 hover:text-slate-900 font-black cursor-pointer flex items-center space-x-1.5 transition">
          <span>👨‍🏫 Teacher & Staff Payroll</span> (<span id="tabCountTeachers" class="font-mono">11</span>)
@@ -1293,7 +1297,7 @@
   <script>
     // Master Baseline Data & Config
     const DEFAULT_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzdzKAGkrCKrQA2432FdX0LTFGy8eSh84wdwUJ5iOAovw7X5cd0UmPFjDWCsbl-Cb9b/exec";
-    const INITIAL_PARENTS = [{"id":"PID-001","name":"Mrs Chiyere","student":"Aka, Chimdindu, Kosiso","email":"chiyere@parent.org","phone":"+447462576895","fee":150000,"currency":"NGN","dueDay":12,"status":"Active","notes":"Done for July to August 12. Multi-child family (3 kids)."},{"id":"PID-002","name":"Mrs Proscocias","student":"Mapalo & Teresa","email":"proscocias@parent.org","phone":"+447467096117","fee":90,"currency":"GBP","dueDay":15,"status":"Inactive","notes":"Currently Paused in original roster."},{"id":"PID-003","name":"Mrs Linda","student":"Eleazar","email":"linda@parent.org","phone":"+447883546142","fee":90,"currency":"GBP","dueDay":15,"status":"Inactive","notes":"Paused in original roster."},{"id":"PID-004","name":"Mrs Olly","student":"Iseoluwa","email":"olly@parent.org","phone":"+447990494119","fee":45,"currency":"GBP","dueDay":22,"status":"Active","notes":"Balance paid on 26/may/2026. Teacher: Mr Peter."},{"id":"PID-005","name":"Mrs Orenta","student":"David","email":"orenta@parent.org","phone":"+447484184012","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Paid 25k for half month. Done for June 28."},{"id":"PID-006","name":"Mrs Maria","student":"Precious","email":"maria@parent.org","phone":"+447000000006","fee":85,"currency":"GBP","dueDay":12,"status":"Active","notes":"Teacher: Mr Stephen Matthew."},{"id":"PID-007","name":"Daddy Sharon(Water)","student":"Sharon","email":"sharon.water@parent.org","phone":"+447000000007","fee":50000,"currency":"NGN","dueDay":6,"status":"Inactive","notes":"Paused in original roster. Done for July to August 6."},{"id":"PID-008","name":"Mrs Bespoke","student":"Made","email":"bespoke@parent.org","phone":"+447000000008","fee":80000,"currency":"NGN","dueDay":28,"status":"Active","notes":"Custom Date: 28 Jun 2026."},{"id":"PID-009","name":"Mrs Catherine","student":"Ethan, Tyra","email":"catherine@parent.org","phone":"+447000000009","fee":259000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Guitar + Voice."},{"id":"PID-010","name":"Mr Babatunde","student":"Olamide","email":"babatunde@parent.org","phone":"+447000000010","fee":100000,"currency":"NGN","dueDay":17,"status":"Active","notes":"Trial Active in original roster."},{"id":"PID-011","name":"Mrs Beileag","student":"Israel","email":"beileag@parent.org","phone":"+447000000011","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Part payment made."},{"id":"PID-012","name":"Mummy Similoore","student":"Similoore","email":"similoore@parent.org","phone":"+447000000012","fee":90000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-013","name":"Mrs Fola","student":"Iremide, Eunice","email":"fola@parent.org","phone":"+447000000013","fee":180000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Multi-child family."},{"id":"PID-014","name":"Mr Fury","student":"Eliot","email":"fury@parent.org","phone":"+447000000014","fee":39,"currency":"GBP","dueDay":21,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-015","name":"Mrs Olalere","student":"Abraham, Mabel","email":"olalere@parent.org","phone":"+447000000015","fee":100000,"currency":"NGN","dueDay":23,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-016","name":"Pst Maxwell","student":"Elijah, Esther","email":"maxwell@parent.org","phone":"+447000000016","fee":100000,"currency":"NGN","dueDay":18,"status":"Active","notes":"Elijah active, Esther paused in original roster."},{"id":"PID-017","name":"Mrs Nneamaka","student":"Pearl, Nicole","email":"nneamaka@parent.org","phone":"+447000000017","fee":70,"currency":"GBP","dueDay":4,"status":"Active","notes":"Due on 4th of each month."},{"id":"PID-018","name":"Mrs Deborah","student":"Peculiar","email":"deborah@parent.org","phone":"+447000000018","fee":39,"currency":"GBP","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-019","name":"Mrs Powers","student":"Olamma","email":"powers@parent.org","phone":"+447000000019","fee":39,"currency":"GBP","dueDay":5,"status":"Inactive","notes":"Paused in original roster. Teacher: Mr Sunday."},{"id":"PID-020","name":"Mr Yekini","student":"Success","email":"yekini@parent.org","phone":"+447000000020","fee":100000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-021","name":"Mr Falade","student":"Ivan","email":"falade@parent.org","phone":"+447000000021","fee":120000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teachers: Mr Emmaunel(Guitar), Mr Marovation."},{"id":"PID-022","name":"Mrs Nnegi","student":"Sean","email":"nnegi@parent.org","phone":"+447000000022","fee":35,"currency":"GBP","dueDay":3,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-023","name":"Mrs Charity","student":"Momoreoluwa","email":"charity@parent.org","phone":"+447000000023","fee":39,"currency":"GBP","dueDay":3,"status":"Active","notes":"Due on 3rd of each month."},{"id":"PID-024","name":"Mrs Quinny Chinny","student":"Ola","email":"quinny@parent.org","phone":"+447000000024","fee":39,"currency":"GBP","dueDay":14,"status":"Active","notes":"Lesson start 14 Aug 2026."},{"id":"PID-025","name":"Mrs Blessing Ikakah","student":"Greatest","email":"blessing@parent.org","phone":"+447000000025","fee":35,"currency":"GBP","dueDay":11,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-026","name":"Mrs Kas","student":"Kitan","email":"kas@parent.org","phone":"+447000000026","fee":39,"currency":"GBP","dueDay":5,"status":"Active","notes":"Due on 5th of each month."},{"id":"PID-027","name":"Mrs Africa","student":"Sharon","email":"africa@parent.org","phone":"+447000000027","fee":50000,"currency":"NGN","dueDay":6,"status":"Active","notes":"Vocal and Piano."},{"id":"PID-028","name":"Mrs Belema","student":"Destiny, David","email":"belema@parent.org","phone":"+447000000028","fee":120000,"currency":"NGN","dueDay":15,"status":"Active","notes":"Destiny and David."},{"id":"PID-029","name":"Mr bamikole","student":"Naomi, Joan","email":"bamikole@parent.org","phone":"+447000000029","fee":100000,"currency":"NGN","dueDay":20,"status":"Active","notes":"Piano student family."},{"id":"PID-030","name":"Mrs Ifeoluwa","student":"Israel","email":"ifeoluwa@parent.org","phone":"+447000000030","fee":60000,"currency":"NGN","dueDay":10,"status":"Active","notes":"Music Specialist lessons."},{"id":"PID-031","name":"Mr Stephen","student":"Dominion, Zion","email":"stephen@parent.org","phone":"+447000000031","fee":70,"currency":"GBP","dueDay":12,"status":"Active","notes":"Dominion and Zion."},{"id":"PID-032","name":"Mrs Blessing Okon","student":"Bree, Skylar, Favour","email":"blessing.okon@parent.org","phone":"+447000000032","fee":120000,"currency":"NGN","dueDay":25,"status":"Active","notes":"Bree, Skylar, Favour multi-child."}];
+    const INITIAL_PARENTS = [{"id":"PID-001","name":"Mrs Chiyere","student":"Aka, Chimdindu, Kosiso","email":"chiyere@parent.org","phone":"+447462576895","fee":150000,"currency":"NGN","dueDay":12,"status":"Active","notes":"Done for July to August 12. Multi-child family (3 kids)."},{"id":"PID-002","name":"Mrs Proscocias","student":"Mapalo & Teresa","email":"proscocias@parent.org","phone":"+447467096117","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-003","name":"Mrs Linda","student":"Eleazar","email":"linda@parent.org","phone":"+447883546142","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-004","name":"Mrs Olly","student":"Iseoluwa","email":"olly@parent.org","phone":"+447990494119","fee":45,"currency":"GBP","dueDay":22,"status":"Active","notes":"Balance paid on 26/may/2026. Teacher: Mr Peter."},{"id":"PID-005","name":"Mrs Orenta","student":"David","email":"orenta@parent.org","phone":"+447484184012","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Paid 25k for half month. Done for June 28."},{"id":"PID-006","name":"Mrs Maria","student":"Precious","email":"maria@parent.org","phone":"+447000000006","fee":85,"currency":"GBP","dueDay":12,"status":"Active","notes":"Teacher: Mr Stephen Matthew."},{"id":"PID-007","name":"Daddy Sharon(Water)","student":"Sharon","email":"sharon.water@parent.org","phone":"+447000000007","fee":50000,"currency":"NGN","dueDay":6,"status":"Inactive","notes":"Paused in original roster. Done for July to August 6."},{"id":"PID-008","name":"Mrs Bespoke","student":"Made","email":"bespoke@parent.org","phone":"+447000000008","fee":80000,"currency":"NGN","dueDay":28,"status":"Active","notes":"Custom Date: 28 Jun 2026."},{"id":"PID-009","name":"Mrs Catherine","student":"Ethan, Tyra","email":"catherine@parent.org","phone":"+447000000009","fee":259000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Guitar + Voice."},{"id":"PID-010","name":"Mr Babatunde","student":"Olamide","email":"babatunde@parent.org","phone":"+447000000010","fee":100000,"currency":"NGN","dueDay":17,"status":"Active","notes":"Trial Active in original roster."},{"id":"PID-011","name":"Mrs Beileag","student":"Israel","email":"beileag@parent.org","phone":"+447000000011","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Part payment made."},{"id":"PID-012","name":"Mummy Similoore","student":"Similoore","email":"similoore@parent.org","phone":"+447000000012","fee":90000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-013","name":"Mrs Fola","student":"Iremide, Eunice","email":"fola@parent.org","phone":"+447000000013","fee":180000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Multi-child family."},{"id":"PID-014","name":"Mr Fury","student":"Eliot","email":"fury@parent.org","phone":"+447000000014","fee":39,"currency":"GBP","dueDay":21,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-015","name":"Mrs Olalere","student":"Abraham, Mabel","email":"olalere@parent.org","phone":"+447000000015","fee":100000,"currency":"NGN","dueDay":23,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-016","name":"Pst Maxwell","student":"Elijah, Esther","email":"maxwell@parent.org","phone":"+447000000016","fee":100000,"currency":"NGN","dueDay":18,"status":"Active","notes":"Elijah active, Esther paused in original roster."},{"id":"PID-017","name":"Mrs Nneamaka","student":"Pearl, Nicole","email":"nneamaka@parent.org","phone":"+447000000017","fee":70,"currency":"GBP","dueDay":4,"status":"Active","notes":"Due on 4th of each month."},{"id":"PID-018","name":"Mrs Deborah","student":"Peculiar","email":"deborah@parent.org","phone":"+447000000018","fee":39,"currency":"GBP","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-019","name":"Mrs Powers","student":"Olamma","email":"powers@parent.org","phone":"+447000000019","fee":39,"currency":"GBP","dueDay":5,"status":"Inactive","notes":"Paused in original roster. Teacher: Mr Sunday."},{"id":"PID-020","name":"Mr Yekini","student":"Success","email":"yekini@parent.org","phone":"+447000000020","fee":100000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-021","name":"Mr Falade","student":"Ivan","email":"falade@parent.org","phone":"+447000000021","fee":120000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teachers: Mr Emmaunel(Guitar), Mr Marovation."},{"id":"PID-022","name":"Mrs Nnegi","student":"Sean","email":"nnegi@parent.org","phone":"+447000000022","fee":35,"currency":"GBP","dueDay":3,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-023","name":"Mrs Charity","student":"Momoreoluwa","email":"charity@parent.org","phone":"+447000000023","fee":39,"currency":"GBP","dueDay":3,"status":"Active","notes":"Due on 3rd of each month."},{"id":"PID-024","name":"Mrs Quinny Chinny","student":"Ola","email":"quinny@parent.org","phone":"+447000000024","fee":39,"currency":"GBP","dueDay":14,"status":"Active","notes":"Lesson start 14 Aug 2026."},{"id":"PID-025","name":"Mrs Blessing Ikakah","student":"Greatest","email":"blessing@parent.org","phone":"+447000000025","fee":35,"currency":"GBP","dueDay":11,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-026","name":"Mrs Kas","student":"Kitan","email":"kas@parent.org","phone":"+447000000026","fee":39,"currency":"GBP","dueDay":5,"status":"Active","notes":"Due on 5th of each month."},{"id":"PID-027","name":"Mrs Africa","student":"Sharon","email":"africa@parent.org","phone":"+447000000027","fee":50000,"currency":"NGN","dueDay":6,"status":"Active","notes":"Vocal and Piano."},{"id":"PID-028","name":"Mrs Belema","student":"Destiny, David","email":"belema@parent.org","phone":"+447000000028","fee":120000,"currency":"NGN","dueDay":15,"status":"Active","notes":"Destiny and David."},{"id":"PID-029","name":"Mr bamikole","student":"Naomi, Joan","email":"bamikole@parent.org","phone":"+447000000029","fee":100000,"currency":"NGN","dueDay":20,"status":"Active","notes":"Piano student family."},{"id":"PID-030","name":"Mrs Ifeoluwa","student":"Israel","email":"ifeoluwa@parent.org","phone":"+447000000030","fee":60000,"currency":"NGN","dueDay":10,"status":"Active","notes":"Music Specialist lessons."},{"id":"PID-031","name":"Mr Stephen","student":"Dominion, Zion","email":"stephen@parent.org","phone":"+447000000031","fee":70,"currency":"GBP","dueDay":12,"status":"Active","notes":"Dominion and Zion."},{"id":"PID-032","name":"Mrs Blessing Okon","student":"Bree, Skylar, Favour","email":"blessing.okon@parent.org","phone":"+447000000032","fee":120000,"currency":"NGN","dueDay":25,"status":"Active","notes":"Bree, Skylar, Favour multi-child."}];
     const INITIAL_HISTORY = [{"parent_name":"Mrs Bespoke","student_name":"Made","id":"TXN-202606-002","parentId":"PID-008","method":"Bank Transfer","notes":"Full payment for June - Custom Date 28 Jun 2026","ref":"REF-TXN-202606-002","date":"2026-06-28","status":"PAID","amount":80000},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202605-001","parentId":"PID-001","method":"Bank Transfer","notes":"balance has been paid on 2/may/2026","ref":"REF-TXN-202605-001","date":"2026-05-02","status":"PAID","amount":150000},{"parent_name":"Daddy Sharon(Water)","student_name":"Sharon","id":"TXN-202607-001","parentId":"PID-007","method":"Bank Transfer","notes":"Paid 50k. Done for July to August 6","ref":"REF-TXN-202607-001","date":"2026-07-06","status":"PAID","amount":50000},{"parent_name":"Mrs Catherine","student_name":"Ethan, Tyra","id":"TXN-202607-002","parentId":"PID-009","method":"Bank Transfer","notes":"Balance has been paid on 1st July 2026... 83k","ref":"REF-TXN-202607-002","date":"2026-07-01","status":"PAID","amount":83000},{"parent_name":"Mrs Fola","student_name":"Iremide, Eunice","id":"TXN-202608-002","parentId":"PID-013","method":"Bank Transfer","notes":"Done for July to August 10","ref":"REF-TXN-202608-002","date":"2026-08-10","status":"PAID","amount":180000},{"parent_name":"Mrs Olly","student_name":"Iseoluwa","id":"TXN-202605-002","parentId":"PID-004","method":"Bank Transfer","notes":"balance has been paid on 26/may/2026","ref":"REF-TXN-202605-002","date":"2026-05-26","status":"PAID","amount":45},{"parent_name":"Mrs Orenta","student_name":"David","id":"TXN-202606-001","parentId":"PID-005","method":"Bank Transfer","notes":"Paid 25k for half month (Done for June 28)","ref":"REF-TXN-202606-001","date":"2026-06-28","status":"PAID","amount":25000},{"parent_name":"Mrs Beileag","student_name":"Israel","id":"TXN-202607-003","parentId":"PID-011","method":"Bank Transfer","notes":"25k part payment made on July 8","ref":"REF-TXN-202607-003","date":"2026-07-08","status":"PAID","amount":25000},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202608-001","parentId":"PID-001","method":"Bank Transfer","notes":"Done for July to August 12","ref":"REF-TXN-202608-001","date":"2026-08-12","status":"PAID","amount":150000},{"parent_name":"Mrs Orenta","student_name":"David","id":"TXN-202610-049","parentId":"PID-005","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-049","date":"2026-10-30","status":"PAID","amount":60000},{"parent_name":"Mrs Nneamaka","student_name":"Nneamaka Child","id":"TXN-202610-050","parentId":"PID-017","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-050","date":"2026-10-04","status":"PAID","amount":70},{"parent_name":"Mrs Charity","student_name":"Momoreoluwa","id":"TXN-202610-051","parentId":"PID-023","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-051","date":"2026-10-03","status":"PAID","amount":39},{"parent_name":"Mrs Quinny Chinny","student_name":"Ola","id":"TXN-202610-052","parentId":"PID-024","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-052","date":"2026-10-14","status":"PAID","amount":39},{"parent_name":"Mrs Kas","student_name":"Kitan","id":"TXN-202610-053","parentId":"PID-026","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-053","date":"2026-10-05","status":"PAID","amount":39},{"parent_name":"Mrs Blessing Ikakah","student_name":"Greatest","id":"TXN-202610-054","parentId":"PID-025","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-054","date":"2026-10-11","status":"PAID","amount":35},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202610-018","parentId":"PID-001","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-018","date":"2026-10-12","status":"PAID","amount":150000},{"parent_name":"Mrs Catherine","student_name":"Ethan, Tyra","id":"TXN-202610-019","parentId":"PID-009","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-019","date":"2026-10-01","status":"PAID","amount":259000},{"parent_name":"Mrs Fola","student_name":"Iremide, Eunice","id":"TXN-202610-020","parentId":"PID-013","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-020","date":"2026-10-01","status":"PAID","amount":180000},{"parent_name":"Mrs Nnegi","student_name":"Sean","id":"TXN-202610-021","parentId":"PID-022","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-021","date":"2026-10-03","status":"PAID","amount":35},{"parent_name":"Mrs Proscocias","student_name":"Mapalo \u0026 Teresa","id":"TXN-202610-023","parentId":"PID-002","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-023","date":"2026-10-15","status":"PAID","amount":90},{"parent_name":"Mrs Linda","student_name":"Eleazar","id":"TXN-202610-024","parentId":"PID-003","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-024","date":"2026-10-15","status":"PAID","amount":90},{"parent_name":"Mrs Maria","student_name":"Precious","id":"TXN-202610-022","parentId":"PID-006","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-022","date":"2026-10-12","status":"PAID","amount":85}];
 
     let parents = [];
@@ -1368,7 +1372,7 @@
       showToast(`Returned to current live cycle: ${MONTH_NAMES[activeCycleMonth]} ${activeCycleYear}`);
     }
 
-    const ROSTER_SCHEMA_VERSION = "2026.10_32_PARENTS_V2";
+    const ROSTER_SCHEMA_VERSION = "2026.10_32_PARENTS_V4";
 
     // Load & Save State with Multi-Layer Safety & Auto-Healing
     function loadState() {
@@ -1381,37 +1385,18 @@
         let parsedHistory = savedH ? JSON.parse(savedH) : null;
 
         // Auto-heal: Ensure all 32 baseline parents exist with their complete financial attributes
-        if (cachedVersion !== ROSTER_SCHEMA_VERSION || !Array.isArray(parsedParents) || parsedParents.length < INITIAL_PARENTS.length) {
-          const merged = INITIAL_PARENTS.map(ip => {
-            if (Array.isArray(parsedParents)) {
-              const matched = parsedParents.find(p => p.id === ip.id || (p.name && ip.name && p.name.toLowerCase().trim() === ip.name.toLowerCase().trim()));
-              if (matched) {
-                return {
-                  ...ip,
-                  ...matched,
-                  fee: Number(matched.fee) > 0 ? Number(matched.fee) : ip.fee,
-                  currency: matched.currency || ip.currency,
-                  student: matched.student || ip.student,
-                  dueDay: matched.dueDay || ip.dueDay
-                };
-              }
-            }
-            return { ...ip };
-          });
-          // Also keep any extra custom parents that were added locally
-          if (Array.isArray(parsedParents)) {
-            parsedParents.forEach(p => {
-              if (!merged.some(m => m.id === p.id || (m.name && p.name && m.name.toLowerCase().trim() === p.name.toLowerCase().trim()))) {
-                merged.push(p);
-              }
-            });
-          }
-          parents = merged;
-          try { localStorage.setItem('parentTrackerRosterVersion', ROSTER_SCHEMA_VERSION); } catch(e){}
+        if (cachedVersion !== ROSTER_SCHEMA_VERSION || !Array.isArray(parsedParents) || parsedParents.length !== INITIAL_PARENTS.length) {
+          console.log("⚡ Auto-healing roster: resetting to clean 32 conservatory parents...");
+          try {
+            localStorage.removeItem('parentTrackerParents');
+            localStorage.removeItem('ppt_parents');
+            localStorage.setItem('parentTrackerRosterVersion', ROSTER_SCHEMA_VERSION);
+          } catch(e){}
+          parents = INITIAL_PARENTS.map(ip => ({ ...ip }));
         } else {
-          // If saved parents has >= 32, verify each parent has a valid fee, otherwise heal from INITIAL_PARENTS
+          // If saved parents has 32, verify each parent has a valid fee, otherwise heal from INITIAL_PARENTS
           parents = parsedParents.map(p => {
-            const base = INITIAL_PARENTS.find(ip => ip.id === p.id || (ip.name && p.name && ip.name.toLowerCase().trim() === p.name.toLowerCase().trim()));
+            const base = INITIAL_PARENTS.find(ip => ip.id === p.id || (ip.name && p.name && ip.name.toLowerCase().trim() === ip.name.toLowerCase().trim()));
             return {
               ...p,
               fee: Number(p.fee) > 0 ? Number(p.fee) : (base ? base.fee : 0),
@@ -2611,25 +2596,9 @@
               if (local) {
                 if (cp.phone) local.phone = cp.phone;
                 if (cp.email) local.email = cp.email;
-                if (cp.status && cp.status !== 'undefined') local.status = cp.status;
                 if (cp.customDueDates) local.customDueDates = { ...(local.customDueDates || {}), ...(cp.customDueDates || {}) };
                 if (cp.parkedMonths) local.parkedMonths = { ...(local.parkedMonths || {}), ...(cp.parkedMonths || {}) };
                 if (cp.paidCycles) local.paidCycles = { ...(local.paidCycles || {}), ...(cp.paidCycles || {}) };
-                if (Number(cp.fee) > 0) local.fee = Number(cp.fee);
-                else if (Number(cp.monthly_fee) > 0) local.fee = Number(cp.monthly_fee);
-              } else if (cp.name && !parents.some(p => p.name.toLowerCase().trim() === cp.name.toLowerCase().trim())) {
-                parents.push({
-                  id: cp.id || `PID-${String(parents.length + 1).padStart(3, '0')}`,
-                  name: cp.name,
-                  student: cp.student || cp.child_name || '',
-                  phone: cp.phone || '',
-                  email: cp.email || '',
-                  fee: Number(cp.fee) || Number(cp.monthly_fee) || 50000,
-                  currency: cp.currency || 'NGN',
-                  dueDay: parseInt(cp.dueDay) || 28,
-                  status: cp.status || 'Active',
-                  notes: cp.notes || ''
-                });
               }
             });
           }
@@ -3496,37 +3465,22 @@
         const evtType = String(payload.eventType || payload.event || (payload.old && !payload.new ? 'DELETE' : 'UPDATE')).toUpperCase();
         if (typeof parents !== 'undefined' && Array.isArray(parents)) {
             if (evtType === 'DELETE' || (!payload.new && payload.old)) {
-                const delId = payload.old ? payload.old.id : (payload.id || null);
-                if (delId) {
-                    parents = parents.filter(p => p.id !== delId);
-                }
+                // Keep official 32 conservatory roster intact
             } else if (payload.new) {
                 const updated = payload.new;
                 const idx = parents.findIndex(p => p.id === updated.id || (p.name && updated.name && p.name.toLowerCase() === updated.name.toLowerCase()));
                 if (idx !== -1) {
                     parents[idx].phone = updated.phone || parents[idx].phone;
                     parents[idx].email = updated.email || parents[idx].email;
-                    if (updated.status) parents[idx].status = updated.status.charAt(0).toUpperCase() + updated.status.slice(1).toLowerCase();
-                } else {
-                    parents.push({
-                        id: updated.id,
-                        name: updated.name || 'Parent',
-                        student: updated.student || updated.child_name || '',
-                        phone: updated.phone || '',
-                        email: updated.email || '',
-                        fee: parseFloat(updated.fee) || 0,
-                        currency: updated.currency || 'NGN',
-                        dueDay: parseInt(updated.dueDay) || 28,
-                        status: updated.status || 'Active',
-                        notes: updated.notes || ''
-                    });
+                    // Do not mutate financial status from external events
                 }
+                // Never push arbitrary unknown parents into parents! Conservatory ledger is strictly the 32 baseline parents.
             }
             saveState();
             updateDashboard();
             renderTrackerTable();
             renderParentsTable();
-            if (typeof showToast === 'function') showToast("⚡ Realtime Sync: Parent Roster Updated", "info");
+            if (typeof showToast === 'function') showToast("⚡ Realtime Sync: Parent Contact Updated", "info");
         }
     };
 
@@ -3583,15 +3537,19 @@
         if (!cloudData) return;
         let changed = false;
 
-        // 1. Merge Parents from Supabase
+        // 1. Merge Parent contact info from Supabase (preserving official 32 conservatory roster & financial status)
         if (Array.isArray(cloudData.parents) && cloudData.parents.length > 0) {
             cloudData.parents.forEach(cp => {
                 const idx = parents.findIndex(p => p.id === cp.id || (p.name && cp.name && p.name.toLowerCase() === cp.name.toLowerCase()));
                 if (idx !== -1) {
-                    parents[idx].phone = cp.phone || parents[idx].phone;
-                    parents[idx].email = cp.email || parents[idx].email;
-                    if (cp.status) parents[idx].status = cp.status.charAt(0).toUpperCase() + cp.status.slice(1).toLowerCase();
-                    changed = true;
+                    if (cp.phone && cp.phone !== parents[idx].phone) {
+                        parents[idx].phone = cp.phone;
+                        changed = true;
+                    }
+                    if (cp.email && cp.email !== parents[idx].email) {
+                        parents[idx].email = cp.email;
+                        changed = true;
+                    }
                 }
             });
         }

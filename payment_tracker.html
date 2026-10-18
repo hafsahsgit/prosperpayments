@@ -26,8 +26,25 @@
 
       function cleanParentPayload(p) {
           if (!p) return null;
+          let plainNotes = p.notes || '';
+          if (typeof plainNotes === 'string' && plainNotes.startsWith('PPT_META:')) {
+              try {
+                  const parsed = JSON.parse(plainNotes.slice(9));
+                  plainNotes = (parsed && parsed.text !== undefined) ? parsed.text : '';
+              } catch(e) { plainNotes = ''; }
+          }
+          const meta = {
+              dueDay: parseInt(p.dueDay, 10) || 28,
+              customDueDates: p.customDueDates || {},
+              customDueDate: p.customDueDate || '',
+              fee: parseFloat(p.fee) || 0,
+              currency: p.currency || 'NGN',
+              student: p.student || '',
+              arrears: parseFloat(p.arrears) || 0,
+              text: plainNotes
+          };
           return {
-              id: String(p.id || ('PAR-' + Math.floor(1000 + Math.random() * 9000))),
+              id: String(p.id || ('PID-' + Math.floor(100 + Math.random() * 900))),
               name: String(p.name || 'Parent'),
               relationship: String(p.relationship || 'Mother'),
               phone: String(p.phone || ''),
@@ -35,7 +52,7 @@
               address: String(p.address || ''),
               student_ids: Array.isArray(p.student_ids) ? p.student_ids : [],
               status: String(p.status || 'ACTIVE').toUpperCase(),
-              notes: String(p.notes || ''),
+              notes: "PPT_META:" + JSON.stringify(meta),
               updated_at: new Date().toISOString()
           };
       }
@@ -1372,7 +1389,7 @@
       showToast(`Returned to current live cycle: ${MONTH_NAMES[activeCycleMonth]} ${activeCycleYear}`);
     }
 
-    const ROSTER_SCHEMA_VERSION = "2026.10_32_PARENTS_V4";
+    const ROSTER_SCHEMA_VERSION = "2026.10_32_PARENTS_V5";
 
     // Load & Save State with Multi-Layer Safety & Auto-Healing
     function loadState() {
@@ -1396,7 +1413,7 @@
         } else {
           // If saved parents has 32, verify each parent has a valid fee, otherwise heal from INITIAL_PARENTS
           parents = parsedParents.map(p => {
-            const base = INITIAL_PARENTS.find(ip => ip.id === p.id || (ip.name && p.name && ip.name.toLowerCase().trim() === ip.name.toLowerCase().trim()));
+            const base = INITIAL_PARENTS.find(ip => ip.id === p.id || (ip.name && p.name && ip.name.toLowerCase().trim() === p.name.toLowerCase().trim()));
             return {
               ...p,
               fee: Number(p.fee) > 0 ? Number(p.fee) : (base ? base.fee : 0),
@@ -2484,7 +2501,10 @@
       };
 
       if (idx >= 0) {
-        parents[idx] = pData;
+        parents[idx] = {
+          ...parents[idx],
+          ...pData
+        };
         showToast(`Parent ${pData.name} updated.`);
       } else {
         parents.push(pData);
@@ -2497,7 +2517,7 @@
       renderTrackerTable();
       renderParentsTable();
 
-      pushUpdateToCloud('save_parent', pData);
+      pushUpdateToCloud('save_parent', idx >= 0 ? parents[idx] : pData);
 
       if (sheetApiUrl) {
         try {
@@ -3458,29 +3478,116 @@
         };
     }
 
+    // Helper to unpack cloud parent metadata and sync due dates across all devices
+    function unpackParentCloudData(cp, target) {
+        if (!cp || !target) return false;
+        let changed = false;
+
+        // 0. Sync ID if target had older PAR-xxx id
+        if (cp.id && target.id !== cp.id) {
+            target.id = cp.id;
+            changed = true;
+        }
+
+        // 1. Phone & Email
+        if (cp.phone !== undefined && cp.phone !== null && cp.phone !== target.phone) {
+            target.phone = cp.phone;
+            changed = true;
+        }
+        if (cp.email !== undefined && cp.email !== null && cp.email !== target.email) {
+            target.email = cp.email;
+            changed = true;
+        }
+
+        // 2. Status
+        if (cp.status) {
+            const normStatus = cp.status.charAt(0).toUpperCase() + cp.status.slice(1).toLowerCase();
+            if (normStatus !== target.status) {
+                target.status = normStatus;
+                changed = true;
+            }
+        }
+
+        // 3. Metadata (dueDay, customDueDates, fee, currency, student, arrears, notes)
+        if (cp.notes && typeof cp.notes === 'string') {
+            let meta = null;
+            if (cp.notes.startsWith('PPT_META:')) {
+                try { meta = JSON.parse(cp.notes.slice(9)); } catch(e){}
+            } else if (cp.notes.trim().startsWith('{') && cp.notes.trim().endsWith('}')) {
+                try { meta = JSON.parse(cp.notes); } catch(e){}
+            }
+
+            if (meta) {
+                if (meta.dueDay && target.dueDay !== parseInt(meta.dueDay, 10)) {
+                    target.dueDay = parseInt(meta.dueDay, 10);
+                    changed = true;
+                }
+                if (meta.customDueDates && typeof meta.customDueDates === 'object') {
+                    const curStr = JSON.stringify(target.customDueDates || {});
+                    const newStr = JSON.stringify(meta.customDueDates);
+                    if (curStr !== newStr) {
+                        target.customDueDates = { ...meta.customDueDates };
+                        changed = true;
+                    }
+                }
+                if (meta.customDueDate && meta.customDueDate !== target.customDueDate) {
+                    target.customDueDate = meta.customDueDate;
+                    changed = true;
+                }
+                if (meta.fee !== undefined && Number(meta.fee) > 0 && Number(meta.fee) !== Number(target.fee)) {
+                    target.fee = parseFloat(meta.fee);
+                    changed = true;
+                }
+                if (meta.currency && meta.currency !== target.currency) {
+                    target.currency = meta.currency;
+                    changed = true;
+                }
+                if (meta.student && meta.student !== target.student) {
+                    target.student = meta.student;
+                    changed = true;
+                }
+                if (meta.arrears !== undefined && Number(meta.arrears) !== Number(target.arrears)) {
+                    target.arrears = parseFloat(meta.arrears);
+                    changed = true;
+                }
+                if (meta.text !== undefined) {
+                    let cleanText = meta.text;
+                    if (typeof cleanText === 'string' && cleanText.startsWith('PPT_META:')) {
+                        try {
+                            const inner = JSON.parse(cleanText.slice(9));
+                            if (inner && inner.text !== undefined) cleanText = inner.text;
+                        } catch(e){}
+                    }
+                    if (cleanText !== target.notes) {
+                        target.notes = cleanText;
+                        changed = true;
+                    }
+                }
+            } else if (cp.notes !== target.notes && !cp.notes.startsWith('Teacher:')) {
+                target.notes = cp.notes;
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
     // Realtime Incoming WebSockets Listeners (Payment Tracker)
     window.onRealtimeParentUpdate = function(payload) {
         console.log("⚡ PT Realtime Parent Payload:", payload);
         if (!payload) return;
-        const evtType = String(payload.eventType || payload.event || (payload.old && !payload.new ? 'DELETE' : 'UPDATE')).toUpperCase();
-        if (typeof parents !== 'undefined' && Array.isArray(parents)) {
-            if (evtType === 'DELETE' || (!payload.new && payload.old)) {
-                // Keep official 32 conservatory roster intact
-            } else if (payload.new) {
-                const updated = payload.new;
-                const idx = parents.findIndex(p => p.id === updated.id || (p.name && updated.name && p.name.toLowerCase() === updated.name.toLowerCase()));
-                if (idx !== -1) {
-                    parents[idx].phone = updated.phone || parents[idx].phone;
-                    parents[idx].email = updated.email || parents[idx].email;
-                    // Do not mutate financial status from external events
+        if (typeof parents !== 'undefined' && Array.isArray(parents) && payload.new) {
+            const updated = payload.new;
+            const idx = parents.findIndex(p => p.id === updated.id || (p.name && updated.name && p.name.toLowerCase().trim() === updated.name.toLowerCase().trim()));
+            if (idx !== -1) {
+                if (unpackParentCloudData(updated, parents[idx])) {
+                    saveState();
+                    updateDashboard();
+                    renderTrackerTable();
+                    renderParentsTable();
+                    if (typeof showToast === 'function') showToast(`⚡ Live Sync: ${parents[idx].name} updated across devices!`, "info");
                 }
-                // Never push arbitrary unknown parents into parents! Conservatory ledger is strictly the 32 baseline parents.
             }
-            saveState();
-            updateDashboard();
-            renderTrackerTable();
-            renderParentsTable();
-            if (typeof showToast === 'function') showToast("⚡ Realtime Sync: Parent Contact Updated", "info");
         }
     };
 
@@ -3537,17 +3644,12 @@
         if (!cloudData) return;
         let changed = false;
 
-        // 1. Merge Parent contact info from Supabase (preserving official 32 conservatory roster & financial status)
+        // 1. Merge Parent contact info, status, and due dates from Supabase
         if (Array.isArray(cloudData.parents) && cloudData.parents.length > 0) {
             cloudData.parents.forEach(cp => {
-                const idx = parents.findIndex(p => p.id === cp.id || (p.name && cp.name && p.name.toLowerCase() === cp.name.toLowerCase()));
+                const idx = parents.findIndex(p => p.id === cp.id || (p.name && cp.name && p.name.toLowerCase().trim() === cp.name.toLowerCase().trim()));
                 if (idx !== -1) {
-                    if (cp.phone && cp.phone !== parents[idx].phone) {
-                        parents[idx].phone = cp.phone;
-                        changed = true;
-                    }
-                    if (cp.email && cp.email !== parents[idx].email) {
-                        parents[idx].email = cp.email;
+                    if (unpackParentCloudData(cp, parents[idx])) {
                         changed = true;
                     }
                 }

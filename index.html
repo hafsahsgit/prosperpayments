@@ -423,7 +423,7 @@
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span id="syncBadgeText">Online</span>
             </button>
-            <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-900/60 text-emerald-300 font-mono font-bold border border-emerald-500/30" title="Roster 32 Realtime Version">v3.0 (32 Synced)</span>
+            <span id="headerSyncVersionBadge" class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-900/60 text-emerald-300 font-mono font-bold border border-emerald-500/30" title="Realtime Synced Roster">Live Synced</span>
           </div>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             <p class="text-xs text-slate-400 font-medium" id="currentDateBanner">Active Cycle: Loading...</p>
@@ -495,7 +495,7 @@
         <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Active Parents</span>
         <div class="mt-2 flex items-baseline justify-between">
           <span class="text-2xl font-black text-slate-900" id="kpiActiveParents">30</span>
-          <span class="text-xs font-semibold text-emerald-700 font-mono">/ 32 Roster</span>
+          <span class="text-xs font-semibold text-emerald-700 font-mono">/ <span id="kpiTotalRoster">33</span> Roster</span>
         </div>
       </div>
 
@@ -774,19 +774,24 @@
           <div class="flex items-center space-x-2">
             <span class="text-xs font-bold text-slate-700 uppercase">Payroll Month:</span>
             <select id="payrollMonthSelect" onchange="changePayrollMonth(this.value)" class="bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold rounded-lg px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none">
+              <option value="October 2026" selected>October 2026</option>
               <option value="September 2026">September 2026</option>
-              <option value="October 2026">October 2026</option>
               <option value="November 2026">November 2026</option>
               <option value="December 2026">December 2026</option>
               <option value="August 2026">August 2026</option>
+              <option value="All Months (All Time)">All Months (All Time)</option>
             </select>
           </div>
-          <div class="text-xs text-slate-500 hidden sm:block">
-            • Enter or adjust the lectures each teacher attended this month
-          </div>
+          <span id="payrollSyncStatusBadge" class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
+            ⚡ Live Synced with Scheduling Attendance
+          </span>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+          <!-- Auto-Calculate / Sync from Scheduling -->
+          <button onclick="syncTeacherPayrollFromScheduling(true)" title="Calculate and refresh teacher hours live from Scheduling Attendance" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center space-x-1.5 shadow transition-all">
+            <span>⚡ Sync Scheduling Hours</span>
+          </button>
           <!-- Add Faculty Teacher Button -->
           <button onclick="openAddTeacherPayrollModal()" class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold flex items-center space-x-1.5 shadow transition-all">
             <span>➕ Add Teacher / Staff</span>
@@ -826,9 +831,9 @@
       <div class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex items-start space-x-3 text-xs text-emerald-900">
         <span class="text-xl">💡</span>
         <div class="space-y-1">
-          <p class="font-black text-emerald-950">How Teacher Payroll Works:</p>
+          <p class="font-black text-emerald-950">⚡ Automated Scheduling Attendance & Payroll Engine:</p>
           <p class="leading-relaxed">
-            Every teacher's hourly rate is securely configured. At the end of the month, simply type the lectures they took into the <strong>Lectures Attended</strong> box or use the <strong>+ / -</strong> steppers. The system automatically multiplies: <span class="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-emerald-300">Lectures × Hourly Rate = Total Payout</span>. Everything persists in your browser and updates all totals in real time!
+            Because both apps share the same Supabase database, whenever attendance is recorded or marked <strong>PRESENT</strong> in the Scheduling Portal (<code class="bg-white px-1 py-0.5 rounded border border-emerald-200 font-mono text-[11px]">student_portal.html</code>), each teacher's delivered hours and monthly salary are <strong>automatically calculated in real time</strong>! The system multiplies <span class="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-emerald-300">Delivered Hours × Hourly Rate = Total Payout</span>. You can also adjust hours manually at any time with the <strong>+ / -</strong> steppers or click <strong>⚡ Sync Scheduling Hours</strong> to refresh.
           </p>
         </div>
       </div>
@@ -1314,7 +1319,7 @@
   <script>
     // Master Baseline Data & Config
     const DEFAULT_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzdzKAGkrCKrQA2432FdX0LTFGy8eSh84wdwUJ5iOAovw7X5cd0UmPFjDWCsbl-Cb9b/exec";
-    const INITIAL_PARENTS = [{"id":"PID-001","name":"Mrs Chiyere","student":"Aka, Chimdindu, Kosiso","email":"chiyere@parent.org","phone":"+447462576895","fee":150000,"currency":"NGN","dueDay":12,"status":"Active","notes":"Done for July to August 12. Multi-child family (3 kids)."},{"id":"PID-002","name":"Mrs Proscocias","student":"Mapalo & Teresa","email":"proscocias@parent.org","phone":"+447467096117","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-003","name":"Mrs Linda","student":"Eleazar","email":"linda@parent.org","phone":"+447883546142","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-004","name":"Mrs Olly","student":"Iseoluwa","email":"olly@parent.org","phone":"+447990494119","fee":45,"currency":"GBP","dueDay":22,"status":"Active","notes":"Balance paid on 26/may/2026. Teacher: Mr Peter."},{"id":"PID-005","name":"Mrs Orenta","student":"David","email":"orenta@parent.org","phone":"+447484184012","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Paid 25k for half month. Done for June 28."},{"id":"PID-006","name":"Mrs Maria","student":"Precious","email":"maria@parent.org","phone":"+447000000006","fee":85,"currency":"GBP","dueDay":12,"status":"Active","notes":"Teacher: Mr Stephen Matthew."},{"id":"PID-007","name":"Daddy Sharon(Water)","student":"Sharon","email":"sharon.water@parent.org","phone":"+447000000007","fee":50000,"currency":"NGN","dueDay":6,"status":"Inactive","notes":"Paused in original roster. Done for July to August 6."},{"id":"PID-008","name":"Mrs Bespoke","student":"Made","email":"bespoke@parent.org","phone":"+447000000008","fee":80000,"currency":"NGN","dueDay":28,"status":"Active","notes":"Custom Date: 28 Jun 2026."},{"id":"PID-009","name":"Mrs Catherine","student":"Ethan, Tyra","email":"catherine@parent.org","phone":"+447000000009","fee":259000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Guitar + Voice."},{"id":"PID-010","name":"Mr Babatunde","student":"Olamide","email":"babatunde@parent.org","phone":"+447000000010","fee":100000,"currency":"NGN","dueDay":17,"status":"Active","notes":"Trial Active in original roster."},{"id":"PID-011","name":"Mrs Beileag","student":"Israel","email":"beileag@parent.org","phone":"+447000000011","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Part payment made."},{"id":"PID-012","name":"Mummy Similoore","student":"Similoore","email":"similoore@parent.org","phone":"+447000000012","fee":90000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-013","name":"Mrs Fola","student":"Iremide, Eunice","email":"fola@parent.org","phone":"+447000000013","fee":180000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Multi-child family."},{"id":"PID-014","name":"Mr Fury","student":"Eliot","email":"fury@parent.org","phone":"+447000000014","fee":39,"currency":"GBP","dueDay":21,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-015","name":"Mrs Olalere","student":"Abraham, Mabel","email":"olalere@parent.org","phone":"+447000000015","fee":100000,"currency":"NGN","dueDay":23,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-016","name":"Pst Maxwell","student":"Elijah, Esther","email":"maxwell@parent.org","phone":"+447000000016","fee":100000,"currency":"NGN","dueDay":18,"status":"Active","notes":"Elijah active, Esther paused in original roster."},{"id":"PID-017","name":"Mrs Nneamaka","student":"Pearl, Nicole","email":"nneamaka@parent.org","phone":"+447000000017","fee":70,"currency":"GBP","dueDay":4,"status":"Active","notes":"Due on 4th of each month."},{"id":"PID-018","name":"Mrs Deborah","student":"Peculiar","email":"deborah@parent.org","phone":"+447000000018","fee":39,"currency":"GBP","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-019","name":"Mrs Powers","student":"Olamma","email":"powers@parent.org","phone":"+447000000019","fee":39,"currency":"GBP","dueDay":5,"status":"Inactive","notes":"Paused in original roster. Teacher: Mr Sunday."},{"id":"PID-020","name":"Mr Yekini","student":"Success","email":"yekini@parent.org","phone":"+447000000020","fee":100000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-021","name":"Mr Falade","student":"Ivan","email":"falade@parent.org","phone":"+447000000021","fee":120000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teachers: Mr Emmaunel(Guitar), Mr Marovation."},{"id":"PID-022","name":"Mrs Nnegi","student":"Sean","email":"nnegi@parent.org","phone":"+447000000022","fee":35,"currency":"GBP","dueDay":3,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-023","name":"Mrs Charity","student":"Momoreoluwa","email":"charity@parent.org","phone":"+447000000023","fee":39,"currency":"GBP","dueDay":3,"status":"Active","notes":"Due on 3rd of each month."},{"id":"PID-024","name":"Mrs Quinny Chinny","student":"Ola","email":"quinny@parent.org","phone":"+447000000024","fee":39,"currency":"GBP","dueDay":14,"status":"Active","notes":"Lesson start 14 Aug 2026."},{"id":"PID-025","name":"Mrs Blessing Ikakah","student":"Greatest","email":"blessing@parent.org","phone":"+447000000025","fee":35,"currency":"GBP","dueDay":11,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-026","name":"Mrs Kas","student":"Kitan","email":"kas@parent.org","phone":"+447000000026","fee":39,"currency":"GBP","dueDay":5,"status":"Active","notes":"Due on 5th of each month."},{"id":"PID-027","name":"Mrs Africa","student":"Sharon","email":"africa@parent.org","phone":"+447000000027","fee":50000,"currency":"NGN","dueDay":6,"status":"Active","notes":"Vocal and Piano."},{"id":"PID-028","name":"Mrs Belema","student":"Destiny, David","email":"belema@parent.org","phone":"+447000000028","fee":120000,"currency":"NGN","dueDay":15,"status":"Active","notes":"Destiny and David."},{"id":"PID-029","name":"Mr bamikole","student":"Naomi, Joan","email":"bamikole@parent.org","phone":"+447000000029","fee":100000,"currency":"NGN","dueDay":20,"status":"Active","notes":"Piano student family."},{"id":"PID-030","name":"Mrs Ifeoluwa","student":"Israel","email":"ifeoluwa@parent.org","phone":"+447000000030","fee":60000,"currency":"NGN","dueDay":10,"status":"Active","notes":"Music Specialist lessons."},{"id":"PID-031","name":"Mr Stephen","student":"Dominion, Zion","email":"stephen@parent.org","phone":"+447000000031","fee":70,"currency":"GBP","dueDay":12,"status":"Active","notes":"Dominion and Zion."},{"id":"PID-032","name":"Mrs Blessing Okon","student":"Bree, Skylar, Favour","email":"blessing.okon@parent.org","phone":"+447000000032","fee":120000,"currency":"NGN","dueDay":25,"status":"Active","notes":"Bree, Skylar, Favour multi-child."}];
+    const INITIAL_PARENTS = [{"id":"PID-001","name":"Mrs Chiyere","student":"Aka, Chimdindu, Kosiso","email":"chiyere@parent.org","phone":"+447462576895","fee":150000,"currency":"NGN","dueDay":12,"status":"Active","notes":"Done for July to August 12. Multi-child family (3 kids)."},{"id":"PID-002","name":"Mrs Proscocias","student":"Mapalo & Teresa","email":"proscocias@parent.org","phone":"+447467096117","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-003","name":"Mrs Linda","student":"Eleazar","email":"linda@parent.org","phone":"+447883546142","fee":90,"currency":"GBP","dueDay":15,"status":"Active","notes":"Active in conservatory roster. Due on 15th."},{"id":"PID-004","name":"Mrs Olly","student":"Iseoluwa","email":"olly@parent.org","phone":"+447990494119","fee":45,"currency":"GBP","dueDay":22,"status":"Active","notes":"Balance paid on 26/may/2026. Teacher: Mr Peter."},{"id":"PID-005","name":"Mrs Orenta","student":"David","email":"orenta@parent.org","phone":"+447484184012","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Paid 25k for half month. Done for June 28."},{"id":"PID-006","name":"Mrs Maria","student":"Precious","email":"maria@parent.org","phone":"+447000000006","fee":85,"currency":"GBP","dueDay":12,"status":"Active","notes":"Teacher: Mr Stephen Matthew."},{"id":"PID-007","name":"Daddy Sharon(Water)","student":"Sharon","email":"sharon.water@parent.org","phone":"+447000000007","fee":50000,"currency":"NGN","dueDay":6,"status":"Inactive","notes":"Paused in original roster. Done for July to August 6."},{"id":"PID-008","name":"Mrs Bespoke","student":"Made","email":"bespoke@parent.org","phone":"+447000000008","fee":80000,"currency":"NGN","dueDay":28,"status":"Active","notes":"Custom Date: 28 Jun 2026."},{"id":"PID-009","name":"Mrs Catherine","student":"Ethan, Tyra","email":"catherine@parent.org","phone":"+447000000009","fee":259000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Guitar + Voice."},{"id":"PID-010","name":"Mr Babatunde","student":"Olamide","email":"babatunde@parent.org","phone":"+447000000010","fee":100000,"currency":"NGN","dueDay":17,"status":"Active","notes":"Trial Active in original roster."},{"id":"PID-011","name":"Mrs Beileag","student":"Israel","email":"beileag@parent.org","phone":"+447000000011","fee":50000,"currency":"NGN","dueDay":30,"status":"Active","notes":"Part payment made."},{"id":"PID-012","name":"Mummy Similoore","student":"Similoore","email":"similoore@parent.org","phone":"+447000000012","fee":90000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-013","name":"Mrs Fola","student":"Iremide, Eunice","email":"fola@parent.org","phone":"+447000000013","fee":180000,"currency":"NGN","dueDay":1,"status":"Active","notes":"Multi-child family."},{"id":"PID-014","name":"Mr Fury","student":"Eliot","email":"fury@parent.org","phone":"+447000000014","fee":39,"currency":"GBP","dueDay":21,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-015","name":"Mrs Olalere","student":"Abraham, Mabel","email":"olalere@parent.org","phone":"+447000000015","fee":100000,"currency":"NGN","dueDay":23,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-016","name":"Pst Maxwell","student":"Elijah, Esther","email":"maxwell@parent.org","phone":"+447000000016","fee":100000,"currency":"NGN","dueDay":18,"status":"Active","notes":"Elijah active, Esther paused in original roster."},{"id":"PID-017","name":"Mrs Nneamaka","student":"Pearl, Nicole","email":"nneamaka@parent.org","phone":"+447000000017","fee":70,"currency":"GBP","dueDay":4,"status":"Active","notes":"Due on 4th of each month."},{"id":"PID-018","name":"Mrs Deborah","student":"Peculiar","email":"deborah@parent.org","phone":"+447000000018","fee":39,"currency":"GBP","dueDay":31,"status":"Active","notes":"Teacher: Mr Samuel Paul."},{"id":"PID-019","name":"Mrs Powers","student":"Olamma","email":"powers@parent.org","phone":"+447000000019","fee":39,"currency":"GBP","dueDay":5,"status":"Inactive","notes":"Paused in original roster. Teacher: Mr Sunday."},{"id":"PID-020","name":"Mr Yekini","student":"Success","email":"yekini@parent.org","phone":"+447000000020","fee":100000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teacher: Mr Marovation."},{"id":"PID-021","name":"Mr Falade","student":"Ivan","email":"falade@parent.org","phone":"+447000000021","fee":120000,"currency":"NGN","dueDay":31,"status":"Active","notes":"Teachers: Mr Emmaunel(Guitar), Mr Marovation."},{"id":"PID-022","name":"Mrs Nnegi","student":"Sean","email":"nnegi@parent.org","phone":"+447000000022","fee":35,"currency":"GBP","dueDay":3,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-023","name":"Mrs Charity","student":"Momoreoluwa","email":"charity@parent.org","phone":"+447000000023","fee":39,"currency":"GBP","dueDay":3,"status":"Active","notes":"Due on 3rd of each month."},{"id":"PID-024","name":"Mrs Quinny Chinny","student":"Ola","email":"quinny@parent.org","phone":"+447000000024","fee":39,"currency":"GBP","dueDay":14,"status":"Active","notes":"Lesson start 14 Aug 2026."},{"id":"PID-025","name":"Mrs Blessing Ikakah","student":"Greatest","email":"blessing@parent.org","phone":"+447000000025","fee":35,"currency":"GBP","dueDay":11,"status":"Active","notes":"Teacher: Mr Sunday."},{"id":"PID-026","name":"Mrs Kas","student":"Kitan","email":"kas@parent.org","phone":"+447000000026","fee":39,"currency":"GBP","dueDay":5,"status":"Active","notes":"Due on 5th of each month."},{"id":"PID-027","name":"Mrs Africa","student":"Sharon","email":"africa@parent.org","phone":"+447000000027","fee":50000,"currency":"NGN","dueDay":6,"status":"Active","notes":"Vocal and Piano."},{"id":"PID-028","name":"Mrs Belema","student":"Destiny, David","email":"belema@parent.org","phone":"+447000000028","fee":120000,"currency":"NGN","dueDay":15,"status":"Active","notes":"Destiny and David."},{"id":"PID-029","name":"Mr bamikole","student":"Naomi, Joan","email":"bamikole@parent.org","phone":"+447000000029","fee":100000,"currency":"NGN","dueDay":20,"status":"Active","notes":"Piano student family."},{"id":"PID-030","name":"Mrs Ifeoluwa","student":"Israel","email":"ifeoluwa@parent.org","phone":"+447000000030","fee":60000,"currency":"NGN","dueDay":10,"status":"Active","notes":"Music Specialist lessons."},{"id":"PID-031","name":"Mr Stephen","student":"Dominion, Zion","email":"stephen@parent.org","phone":"+447000000031","fee":70,"currency":"GBP","dueDay":12,"status":"Active","notes":"Dominion and Zion."},{"id":"PID-032","name":"Mrs Blessing Okon","student":"Bree, Skylar, Favour","email":"blessing.okon@parent.org","phone":"+447000000032","fee":120000,"currency":"NGN","dueDay":25,"status":"Active","notes":"Bree, Skylar, Favour multi-child."},{"id":"PID-033","name":"hafsa","student":"dk","email":"","phone":"+44","fee":5000,"currency":"NGN","dueDay":15,"status":"Active","notes":""}];
     const INITIAL_HISTORY = [{"parent_name":"Mrs Bespoke","student_name":"Made","id":"TXN-202606-002","parentId":"PID-008","method":"Bank Transfer","notes":"Full payment for June - Custom Date 28 Jun 2026","ref":"REF-TXN-202606-002","date":"2026-06-28","status":"PAID","amount":80000},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202605-001","parentId":"PID-001","method":"Bank Transfer","notes":"balance has been paid on 2/may/2026","ref":"REF-TXN-202605-001","date":"2026-05-02","status":"PAID","amount":150000},{"parent_name":"Daddy Sharon(Water)","student_name":"Sharon","id":"TXN-202607-001","parentId":"PID-007","method":"Bank Transfer","notes":"Paid 50k. Done for July to August 6","ref":"REF-TXN-202607-001","date":"2026-07-06","status":"PAID","amount":50000},{"parent_name":"Mrs Catherine","student_name":"Ethan, Tyra","id":"TXN-202607-002","parentId":"PID-009","method":"Bank Transfer","notes":"Balance has been paid on 1st July 2026... 83k","ref":"REF-TXN-202607-002","date":"2026-07-01","status":"PAID","amount":83000},{"parent_name":"Mrs Fola","student_name":"Iremide, Eunice","id":"TXN-202608-002","parentId":"PID-013","method":"Bank Transfer","notes":"Done for July to August 10","ref":"REF-TXN-202608-002","date":"2026-08-10","status":"PAID","amount":180000},{"parent_name":"Mrs Olly","student_name":"Iseoluwa","id":"TXN-202605-002","parentId":"PID-004","method":"Bank Transfer","notes":"balance has been paid on 26/may/2026","ref":"REF-TXN-202605-002","date":"2026-05-26","status":"PAID","amount":45},{"parent_name":"Mrs Orenta","student_name":"David","id":"TXN-202606-001","parentId":"PID-005","method":"Bank Transfer","notes":"Paid 25k for half month (Done for June 28)","ref":"REF-TXN-202606-001","date":"2026-06-28","status":"PAID","amount":25000},{"parent_name":"Mrs Beileag","student_name":"Israel","id":"TXN-202607-003","parentId":"PID-011","method":"Bank Transfer","notes":"25k part payment made on July 8","ref":"REF-TXN-202607-003","date":"2026-07-08","status":"PAID","amount":25000},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202608-001","parentId":"PID-001","method":"Bank Transfer","notes":"Done for July to August 12","ref":"REF-TXN-202608-001","date":"2026-08-12","status":"PAID","amount":150000},{"parent_name":"Mrs Orenta","student_name":"David","id":"TXN-202610-049","parentId":"PID-005","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-049","date":"2026-10-30","status":"PAID","amount":60000},{"parent_name":"Mrs Nneamaka","student_name":"Nneamaka Child","id":"TXN-202610-050","parentId":"PID-017","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-050","date":"2026-10-04","status":"PAID","amount":70},{"parent_name":"Mrs Charity","student_name":"Momoreoluwa","id":"TXN-202610-051","parentId":"PID-023","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-051","date":"2026-10-03","status":"PAID","amount":39},{"parent_name":"Mrs Quinny Chinny","student_name":"Ola","id":"TXN-202610-052","parentId":"PID-024","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-052","date":"2026-10-14","status":"PAID","amount":39},{"parent_name":"Mrs Kas","student_name":"Kitan","id":"TXN-202610-053","parentId":"PID-026","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-053","date":"2026-10-05","status":"PAID","amount":39},{"parent_name":"Mrs Blessing Ikakah","student_name":"Greatest","id":"TXN-202610-054","parentId":"PID-025","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-054","date":"2026-10-11","status":"PAID","amount":35},{"parent_name":"Mrs Chiyere","student_name":"Aka, Chimdindu, Kosiso","id":"TXN-202610-018","parentId":"PID-001","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-018","date":"2026-10-12","status":"PAID","amount":150000},{"parent_name":"Mrs Catherine","student_name":"Ethan, Tyra","id":"TXN-202610-019","parentId":"PID-009","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-019","date":"2026-10-01","status":"PAID","amount":259000},{"parent_name":"Mrs Fola","student_name":"Iremide, Eunice","id":"TXN-202610-020","parentId":"PID-013","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-020","date":"2026-10-01","status":"PAID","amount":180000},{"parent_name":"Mrs Nnegi","student_name":"Sean","id":"TXN-202610-021","parentId":"PID-022","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-021","date":"2026-10-03","status":"PAID","amount":35},{"parent_name":"Mrs Proscocias","student_name":"Mapalo \u0026 Teresa","id":"TXN-202610-023","parentId":"PID-002","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-023","date":"2026-10-15","status":"PAID","amount":90},{"parent_name":"Mrs Linda","student_name":"Eleazar","id":"TXN-202610-024","parentId":"PID-003","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-024","date":"2026-10-15","status":"PAID","amount":90},{"parent_name":"Mrs Maria","student_name":"Precious","id":"TXN-202610-022","parentId":"PID-006","method":"Bank Transfer","notes":"Paid in full for October 2026","ref":"REF-TXN-202610-022","date":"2026-10-12","status":"PAID","amount":85}];
 
     let parents = [];
@@ -1389,7 +1394,7 @@
       showToast(`Returned to current live cycle: ${MONTH_NAMES[activeCycleMonth]} ${activeCycleYear}`);
     }
 
-    const ROSTER_SCHEMA_VERSION = "2026.10_32_PARENTS_V5";
+    const ROSTER_SCHEMA_VERSION = "2026.10_33_PARENTS_V6";
 
     // Load & Save State with Multi-Layer Safety & Auto-Healing
     function loadState() {
@@ -1401,22 +1406,27 @@
         let parsedParents = savedP ? JSON.parse(savedP) : null;
         let parsedHistory = savedH ? JSON.parse(savedH) : null;
 
-        // Auto-heal: Ensure all 32 baseline parents exist with their complete financial attributes
-        if (cachedVersion !== ROSTER_SCHEMA_VERSION || !Array.isArray(parsedParents) || parsedParents.length !== INITIAL_PARENTS.length) {
-          console.log("⚡ Auto-healing roster: resetting to clean 32 conservatory parents...");
-          try {
-            localStorage.removeItem('parentTrackerParents');
-            localStorage.removeItem('ppt_parents');
-            localStorage.setItem('parentTrackerRosterVersion', ROSTER_SCHEMA_VERSION);
-          } catch(e){}
-          parents = INITIAL_PARENTS.map(ip => ({ ...ip }));
+        // Auto-heal baseline without wiping out newly added or cloud parents
+        if (cachedVersion !== ROSTER_SCHEMA_VERSION || !Array.isArray(parsedParents) || parsedParents.length < INITIAL_PARENTS.length) {
+          console.log("⚡ Auto-healing roster baseline while preserving custom/cloud parents...");
+          const existingIds = new Set(Array.isArray(parsedParents) ? parsedParents.map(p => p.id) : []);
+          const existingNames = new Set(Array.isArray(parsedParents) ? parsedParents.map(p => (p.name || '').toLowerCase().trim()) : []);
+
+          let merged = Array.isArray(parsedParents) ? [...parsedParents] : [];
+          INITIAL_PARENTS.forEach(ip => {
+            if (!existingIds.has(ip.id) && !existingNames.has(ip.name.toLowerCase().trim())) {
+              merged.push({ ...ip });
+            }
+          });
+          parents = merged.length > 0 ? merged : INITIAL_PARENTS.map(ip => ({ ...ip }));
+          try { localStorage.setItem('parentTrackerRosterVersion', ROSTER_SCHEMA_VERSION); } catch(e){}
         } else {
-          // If saved parents has 32, verify each parent has a valid fee, otherwise heal from INITIAL_PARENTS
+          // Keep all saved parents (including user-added parents like PID-033 hafsa)
           parents = parsedParents.map(p => {
             const base = INITIAL_PARENTS.find(ip => ip.id === p.id || (ip.name && p.name && ip.name.toLowerCase().trim() === p.name.toLowerCase().trim()));
             return {
               ...p,
-              fee: Number(p.fee) > 0 ? Number(p.fee) : (base ? base.fee : 0),
+              fee: (p.fee !== undefined && !isNaN(Number(p.fee))) ? Number(p.fee) : (base ? base.fee : 0),
               currency: p.currency || (base ? base.currency : 'NGN'),
               dueDay: p.dueDay || (base ? base.dueDay : 28),
               student: p.student || (base ? base.student : '')
@@ -1618,6 +1628,8 @@
 
       const kpiActive = document.getElementById('kpiActiveParents');
       if (kpiActive) kpiActive.innerText = activeOnly.length;
+      const kpiTotal = document.getElementById('kpiTotalRoster');
+      if (kpiTotal) kpiTotal.innerText = parents.length;
 
       let expNgn = 0, expGbp = 0;
       let collNgn = 0, collGbp = 0;
@@ -3119,22 +3131,25 @@
   
 
     // ================================================================
-    // TEACHER PAYROLL & EDITABLE LECTURE ATTENDANCE ENGINE
+    // TEACHER PAYROLL & AUTOMATED SCHEDULING ATTENDANCE ENGINE
     // ================================================================
-    const DB_KEY_TEACHER_PAYROLL = 'prosper_teacher_payroll_data_v2';
+    const DB_KEY_TEACHER_PAYROLL = 'prosper_teacher_payroll_data_v4';
+
+    let cloudStudents = [];
+    let cloudAttendanceLogs = [];
 
     const DEFAULT_TEACHER_PAYROLL = [
-      { id: 'tp_1', name: 'Mr Abraham', role: 'Music Specialist', rate: 15, lectures: 12, status: 'Pending', notes: '' },
-      { id: 'tp_2', name: 'Mr Chris (Guitar)', role: 'Guitar Specialist', rate: 15, lectures: 10, status: 'Pending', notes: '' },
-      { id: 'tp_3', name: 'Mr Emmaunel(Guitar)', role: 'Guitar Specialist', rate: 15, lectures: 8, status: 'Pending', notes: '' },
-      { id: 'tp_4', name: 'Mr Great', role: 'Music Specialist', rate: 15, lectures: 14, status: 'Pending', notes: '' },
-      { id: 'tp_5', name: 'Mr Marovation', role: 'Music Specialist', rate: 15, lectures: 16, status: 'Pending', notes: '' },
-      { id: 'tp_6', name: 'Mr Peter', role: 'Piano & Theory Mentor', rate: 18, lectures: 20, status: 'Pending', notes: '' },
-      { id: 'tp_7', name: 'Mr Samuel Paul', role: 'Music Specialist', rate: 15, lectures: 9, status: 'Pending', notes: '' },
-      { id: 'tp_8', name: 'Mr Stepehn Matthew', role: 'Music Specialist', rate: 15, lectures: 15, status: 'Pending', notes: '' },
-      { id: 'tp_9', name: 'Mr Sunday', role: 'Vocal Coach', rate: 16, lectures: 11, status: 'Pending', notes: '' },
-      { id: 'tp_10', name: 'Mr Timothy(Violin)', role: 'Violin Mentor', rate: 18, lectures: 18, status: 'Pending', notes: '' },
-      { id: 'tp_11', name: 'Ms Clara', role: 'Music Faculty', rate: 15, lectures: 8, status: 'Pending', notes: '' }
+      { id: 'tp_1', name: 'Mr Abraham', role: 'Music Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_2', name: 'Mr Chris (Guitar)', role: 'Guitar Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_3', name: 'Mr Emmaunel(Guitar)', role: 'Guitar Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_4', name: 'Mr Great', role: 'Music Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_5', name: 'Mr Marovation', role: 'Music Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_6', name: 'Mr Peter', role: 'Piano & Theory Mentor', rate: 18, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_7', name: 'Mr Samuel Paul', role: 'Music Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_8', name: 'Mr Stepehn Matthew', role: 'Music Specialist', rate: 15, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_9', name: 'Mr Sunday', role: 'Vocal Coach', rate: 16, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_10', name: 'Mr Timothy(Violin)', role: 'Violin Mentor', rate: 18, lectures: 0, status: 'Pending', notes: '' },
+      { id: 'tp_11', name: 'Ms Clara', role: 'Music Faculty', rate: 15, lectures: 0, status: 'Pending', notes: '' }
     ];
 
     let teacherPayrollData = [];
@@ -3156,6 +3171,139 @@
       try {
         localStorage.setItem(DB_KEY_TEACHER_PAYROLL, JSON.stringify(teacherPayrollData));
       } catch(e) {}
+    }
+
+    function getMonthPrefix(monthStr) {
+      if (!monthStr || monthStr.includes('All')) return '';
+      const months = {
+        'January': '01', 'February': '02', 'March': '03', 'April': '04',
+        'May': '05', 'June': '06', 'July': '07', 'August': '08',
+        'September': '09', 'October': '10', 'November': '11', 'December': '12'
+      };
+      const parts = monthStr.trim().split(' ');
+      if (parts.length === 2 && months[parts[0]]) {
+        return `${parts[1]}-${months[parts[0]]}`;
+      }
+      return '';
+    }
+
+    function normalizeTeacherKey(name) {
+      if (!name) return '';
+      return String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function matchTeacher(tName1, tName2) {
+      if (!tName1 || !tName2) return false;
+      const k1 = normalizeTeacherKey(tName1);
+      const k2 = normalizeTeacherKey(tName2);
+      if (k1 === k2) return true;
+      if (k1.includes(k2) || k2.includes(k1)) return true;
+      // Handle spelling variations: stephen vs stepehn
+      const s1 = k1.replace('stepehn', 'stephen');
+      const s2 = k2.replace('stepehn', 'stephen');
+      if (s1 === s2 || s1.includes(s2) || s2.includes(s1)) return true;
+      return false;
+    }
+
+    function recalculateTeacherPayrollFromAttendance(forceOverwrite = false) {
+      if (!Array.isArray(teacherPayrollData)) return;
+      const monthSelect = document.getElementById('payrollMonthSelect');
+      const selectedMonth = monthSelect ? monthSelect.value : 'October 2026';
+      const monthPrefix = getMonthPrefix(selectedMonth);
+
+      // Filter attendance logs by month and PRESENT status
+      const relevantLogs = (cloudAttendanceLogs || []).filter(l => {
+        if (!l) return false;
+        const status = String(l.status || '').toUpperCase();
+        if (status !== 'PRESENT') return false;
+        if (monthPrefix) {
+          const logDate = String(l.date || '');
+          return logDate.startsWith(monthPrefix);
+        }
+        return true; // All months
+      });
+
+      // Build student-to-teacher lookup map from cloudStudents and parents table
+      const studentTeacherMap = new Map();
+      (cloudStudents || []).forEach(s => {
+        if (s && s.child_name && s.teacher) {
+          studentTeacherMap.set(s.child_name.toLowerCase().trim(), s.teacher.trim());
+          if (s.id) studentTeacherMap.set(String(s.id).toLowerCase().trim(), s.teacher.trim());
+        }
+      });
+      if (typeof parents !== 'undefined' && Array.isArray(parents)) {
+        parents.forEach(p => {
+          if (p && p.student && p.notes && p.notes.includes('Teacher:')) {
+            const m = p.notes.match(/Teacher:\s*([^,\n;]+)/i);
+            if (m && m[1]) {
+              studentTeacherMap.set(p.student.toLowerCase().trim(), m[1].trim());
+            }
+          }
+        });
+      }
+
+      // Auto-discover any new teachers from students table
+      (cloudStudents || []).forEach(s => {
+        if (s && s.teacher && s.teacher.trim()) {
+          const tName = s.teacher.trim();
+          const exists = teacherPayrollData.some(t => matchTeacher(t.name, tName));
+          if (!exists) {
+            teacherPayrollData.push({
+              id: 'tp_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              name: tName,
+              role: 'Faculty Member',
+              rate: 15,
+              lectures: 0,
+              status: 'Pending',
+              notes: 'Auto-detected from Scheduling'
+            });
+          }
+        }
+      });
+
+      // Calculate delivered hours per teacher in relevantLogs
+      teacherPayrollData.forEach(t => {
+        const matched = relevantLogs.filter(l => {
+          let logTeacher = l.teacher || '';
+          if (!logTeacher) {
+            const sId = l.student_id ? String(l.student_id).toLowerCase().trim() : '';
+            const sName = l.student_name ? String(l.student_name).toLowerCase().trim() : '';
+            if (sId && studentTeacherMap.has(sId)) {
+              logTeacher = studentTeacherMap.get(sId);
+            } else if (sName && studentTeacherMap.has(sName)) {
+              logTeacher = studentTeacherMap.get(sName);
+            } else if (sName) {
+              for (let [k, v] of studentTeacherMap.entries()) {
+                if (k.includes(sName) || sName.includes(k)) {
+                  logTeacher = v;
+                  break;
+                }
+              }
+            }
+          }
+          return matchTeacher(t.name, logTeacher);
+        });
+
+        const hours = matched.length;
+        t.autoHours = hours;
+
+        // If not manually locked/overridden or if forced sync, update lectures
+        if (!t.manualOverride || forceOverwrite) {
+          t.lectures = hours;
+        }
+      });
+
+      saveTeacherPayroll();
+      renderTeacherPayroll();
+    }
+
+    function syncTeacherPayrollFromScheduling(showFeedback = true) {
+      teacherPayrollData.forEach(t => { t.manualOverride = false; });
+      recalculateTeacherPayrollFromAttendance(true);
+      if (showFeedback) {
+        const month = (document.getElementById('payrollMonthSelect') || {}).value || 'October 2026';
+        showToast(`⚡ Synchronized all teacher hours with Scheduling Attendance for ${month}!`, 'success');
+      }
     }
 
     function renderTeacherPayroll() {
@@ -3226,7 +3374,9 @@
                 +
               </button>
             </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">Delivered Lectures</div>
+            <div class="text-[10px] mt-0.5 font-bold ${t.manualOverride ? 'text-amber-600' : 'text-emerald-600'}">
+              ${t.manualOverride ? `✏️ Manual: ${lectures} hrs (Auto: ${t.autoHours || 0})` : `⚡ ${t.autoHours !== undefined ? t.autoHours : lectures} hrs from scheduling`}
+            </div>
           </td>
 
           <!-- Total Payout (Dynamic Multiplication) -->
@@ -3284,6 +3434,7 @@
       const t = teacherPayrollData.find(item => item.id === teacherId);
       if (t) {
         t.lectures = isNaN(num) || num < 0 ? 0 : num;
+        t.manualOverride = true;
         saveTeacherPayroll();
         renderTeacherPayroll();
       }
@@ -3295,6 +3446,7 @@
         let current = parseFloat(t.lectures) || 0;
         current = Math.max(0, current + delta);
         t.lectures = current;
+        t.manualOverride = true;
         saveTeacherPayroll();
         renderTeacherPayroll();
       }
@@ -3327,7 +3479,7 @@
         if (typeof history !== 'undefined' && Array.isArray(history)) {
           if (!wasPaid) {
             // Add disbursement to history
-            history.unshift({
+            const disbItem = {
               id: 'DISB-' + Date.now().toString().slice(-6),
               parent_name: t.name + ' (' + (t.role || 'Faculty / Staff') + ')',
               student_name: 'Staff/Teacher Payroll Payout',
@@ -3337,15 +3489,20 @@
               ref: 'PAYROLL-' + t.id,
               notes: `${lectures} lectures/hrs @ £${rate}/hr for ${month} [Disbursed]`,
               currency: '£'
-            });
-            saveHistory();
+            };
+            history.unshift(disbItem);
+            saveState();
+            renderHistoryTable();
+            pushUpdateToCloud('save_payment', disbItem);
           } else {
             // Remove the corresponding disbursement if toggled back
             const refToFind = 'PAYROLL-' + t.id;
             const idx = history.findIndex(h => h.ref === refToFind);
             if (idx !== -1) {
-              history.splice(idx, 1);
-              saveHistory();
+              const removedItem = history.splice(idx, 1)[0];
+              saveState();
+              renderHistoryTable();
+              pushUpdateToCloud('delete_payment', removedItem);
             }
           }
         }
@@ -3418,6 +3575,7 @@
       if (confirm(`Reset all teacher lectures to 0 for ${month}? Rates will be kept intact.`)) {
         teacherPayrollData.forEach(t => {
           t.lectures = 0;
+          t.manualOverride = true;
           t.status = 'Pending';
         });
         saveTeacherPayroll();
@@ -3427,6 +3585,7 @@
     }
 
     function changePayrollMonth(newMonth) {
+      recalculateTeacherPayrollFromAttendance(true);
       showToast(`Selected Payroll Month: ${newMonth}`, 'info');
     }
 
@@ -3489,6 +3648,12 @@
             changed = true;
         }
 
+        // 0.1 Sync Name if updated in cloud
+        if (cp.name && target.name !== cp.name) {
+            target.name = cp.name;
+            changed = true;
+        }
+
         // 1. Phone & Email
         if (cp.phone !== undefined && cp.phone !== null && cp.phone !== target.phone) {
             target.phone = cp.phone;
@@ -3534,7 +3699,7 @@
                     target.customDueDate = meta.customDueDate;
                     changed = true;
                 }
-                if (meta.fee !== undefined && Number(meta.fee) > 0 && Number(meta.fee) !== Number(target.fee)) {
+                if (meta.fee !== undefined && !isNaN(Number(meta.fee)) && Number(meta.fee) !== Number(target.fee)) {
                     target.fee = parseFloat(meta.fee);
                     changed = true;
                 }
@@ -3576,16 +3741,53 @@
     window.onRealtimeParentUpdate = function(payload) {
         console.log("⚡ PT Realtime Parent Payload:", payload);
         if (!payload) return;
-        if (typeof parents !== 'undefined' && Array.isArray(parents) && payload.new) {
-            const updated = payload.new;
-            const idx = parents.findIndex(p => p.id === updated.id || (p.name && updated.name && p.name.toLowerCase().trim() === updated.name.toLowerCase().trim()));
-            if (idx !== -1) {
-                if (unpackParentCloudData(updated, parents[idx])) {
+        const evtType = String(payload.eventType || payload.event || (payload.old && !payload.new ? 'DELETE' : 'UPDATE')).toUpperCase();
+        if (typeof parents !== 'undefined' && Array.isArray(parents)) {
+            if (evtType === 'DELETE' || (!payload.new && payload.old)) {
+                const delId = payload.old ? payload.old.id : (payload.id || null);
+                if (delId) {
+                    const dIdx = parents.findIndex(p => p.id === delId);
+                    if (dIdx !== -1) {
+                        const removed = parents.splice(dIdx, 1);
+                        saveState();
+                        updateDashboard();
+                        renderTrackerTable();
+                        renderParentsTable();
+                        if (typeof showToast === 'function') showToast(`🗑️ Parent ${removed[0].name} removed from cloud`, "info");
+                    }
+                }
+            } else if (payload.new) {
+                const updated = payload.new;
+                const idx = parents.findIndex(p => p.id === updated.id || (p.name && updated.name && p.name.toLowerCase().trim() === updated.name.toLowerCase().trim()));
+                if (idx !== -1) {
+                    if (unpackParentCloudData(updated, parents[idx])) {
+                        saveState();
+                        updateDashboard();
+                        renderTrackerTable();
+                        renderParentsTable();
+                        if (typeof showToast === 'function') showToast(`⚡ Live Sync: ${parents[idx].name} updated across devices!`, "info");
+                    }
+                } else {
+                    // New parent added from another device!
+                    const newParent = {
+                        id: updated.id || ('PID-' + String(parents.length + 1).padStart(3, '0')),
+                        name: updated.name || 'Parent',
+                        student: '',
+                        email: updated.email || '',
+                        phone: updated.phone || '',
+                        fee: 0,
+                        currency: 'NGN',
+                        dueDay: 28,
+                        status: updated.status ? (updated.status.charAt(0).toUpperCase() + updated.status.slice(1).toLowerCase()) : 'Active',
+                        notes: ''
+                    };
+                    unpackParentCloudData(updated, newParent);
+                    parents.push(newParent);
                     saveState();
                     updateDashboard();
                     renderTrackerTable();
                     renderParentsTable();
-                    if (typeof showToast === 'function') showToast(`⚡ Live Sync: ${parents[idx].name} updated across devices!`, "info");
+                    if (typeof showToast === 'function') showToast(`⚡ Live Sync: New parent ${newParent.name} added!`, "success");
                 }
             }
         }
@@ -3623,6 +3825,49 @@
         }
     };
 
+    window.onRealtimeAttendanceLogUpdate = function(payload) {
+        console.log("⚡ PT Realtime Attendance Log Payload:", payload);
+        if (!payload) return;
+        const evtType = String(payload.eventType || payload.event || (payload.old && !payload.new ? 'DELETE' : 'UPDATE')).toUpperCase();
+        if (evtType === 'DELETE' || (!payload.new && payload.old)) {
+            const delId = payload.old ? payload.old.id : (payload.id || null);
+            if (delId) {
+                cloudAttendanceLogs = cloudAttendanceLogs.filter(l => l.id !== delId);
+            }
+        } else if (payload.new) {
+            const updated = payload.new;
+            const idx = cloudAttendanceLogs.findIndex(l => l.id === updated.id);
+            if (idx !== -1) {
+                cloudAttendanceLogs[idx] = Object.assign({}, cloudAttendanceLogs[idx], updated);
+            } else {
+                cloudAttendanceLogs.unshift(updated);
+            }
+        }
+        recalculateTeacherPayrollFromAttendance();
+        if (typeof showToast === 'function') showToast("⚡ Live Sync: Teacher attendance hours updated from scheduling!", "info");
+    };
+
+    window.onRealtimeStudentUpdate = function(payload) {
+        console.log("⚡ PT Realtime Student Payload:", payload);
+        if (!payload) return;
+        const evtType = String(payload.eventType || payload.event || (payload.old && !payload.new ? 'DELETE' : 'UPDATE')).toUpperCase();
+        if (evtType === 'DELETE' || (!payload.new && payload.old)) {
+            const delId = payload.old ? payload.old.id : (payload.id || null);
+            if (delId) {
+                cloudStudents = cloudStudents.filter(s => s.id !== delId);
+            }
+        } else if (payload.new) {
+            const updated = payload.new;
+            const idx = cloudStudents.findIndex(s => s.id === updated.id);
+            if (idx !== -1) {
+                cloudStudents[idx] = Object.assign({}, cloudStudents[idx], updated);
+            } else {
+                cloudStudents.push(updated);
+            }
+        }
+        recalculateTeacherPayrollFromAttendance();
+    };
+
     function pushUpdateToCloud(actionType, payload) {
         if (window.SupabaseEngine && payload) {
             try {
@@ -3644,7 +3889,7 @@
         if (!cloudData) return;
         let changed = false;
 
-        // 1. Merge Parent contact info, status, and due dates from Supabase
+        // 1. Merge Parent contact info, status, due dates, and NEW parents from Supabase
         if (Array.isArray(cloudData.parents) && cloudData.parents.length > 0) {
             cloudData.parents.forEach(cp => {
                 const idx = parents.findIndex(p => p.id === cp.id || (p.name && cp.name && p.name.toLowerCase().trim() === cp.name.toLowerCase().trim()));
@@ -3652,6 +3897,23 @@
                     if (unpackParentCloudData(cp, parents[idx])) {
                         changed = true;
                     }
+                } else {
+                    // Brand new parent from Supabase!
+                    const newParent = {
+                        id: cp.id || ('PID-' + String(parents.length + 1).padStart(3, '0')),
+                        name: cp.name || 'Parent',
+                        student: '',
+                        email: cp.email || '',
+                        phone: cp.phone || '',
+                        fee: 0,
+                        currency: 'NGN',
+                        dueDay: 28,
+                        status: cp.status ? (cp.status.charAt(0).toUpperCase() + cp.status.slice(1).toLowerCase()) : 'Active',
+                        notes: ''
+                    };
+                    unpackParentCloudData(cp, newParent);
+                    parents.push(newParent);
+                    changed = true;
                 }
             });
         }
@@ -3696,11 +3958,21 @@
             renderHistoryTable();
             renderParentsTable();
         }
+
+        // 3. Automated Scheduling Attendance Hours & Teacher Payroll Integration
+        if (Array.isArray(cloudData.students)) {
+            cloudStudents = cloudData.students;
+        }
+        if (Array.isArray(cloudData.attendance_logs)) {
+            cloudAttendanceLogs = cloudData.attendance_logs;
+        }
+        recalculateTeacherPayrollFromAttendance();
     };
 
     // Initialize Teacher Payroll on page load
     window.addEventListener('DOMContentLoaded', () => {
       loadTeacherPayroll();
+      renderTeacherPayroll();
     });
 
 </script>
